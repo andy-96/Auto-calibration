@@ -1,19 +1,19 @@
 # Camera Self-Calibration Research Project - 2020
-@Contributors: Yuhan Liu & Yunhai Han  
+@Contributors: Yunhai Han & Yuhan Liu
 
 
 ## Introduction
 This research project focuses on (real-time) camera self-calibration in urban autonomous driving scenarios. Specifically, we experiment and analyze **intrinsic calibration** routines using only ordinary objects like **stop signs** and **license plates**.  
 
 ## Table of Contents
-* [Experiments & Error Analysis - Winter 2020](https://github.com/AutonomousVehicleLaboratory/camera_auto-calib/blob/master/Overview/2020-2-20.md)  
+* [Experiments & Error Analysis - Winter 2020](https://github.com/y8han/Auto-calibration/blob/master/Overview/2020-2-20.md)  
 **Abstract**: Experimented on varieties of chessboard calibration, analyzed the performances under various factors (e.g. number of points, number of frames, chessboard sizes, and magnitude of noises), and tried modeling the calibration error.  
 **Comments**: Not practical to build an overall error model.
 
-* [Feature Extraction & Line Estimation - Spring 2020](https://github.com/AutonomousVehicleLaboratory/camera_auto-calib/blob/master/Overview/2020-5-5.md)  
+* [Feature Extraction & Line Estimation - Spring 2020](https://github.com/y8han/Auto-calibration/blob/master/Overview/2020-5-5.md)  
 **Abstract**: Finding algorithms to extract feature points (with known 3D coordinates or physical sizes in world objects) from images, and using line estimation to attain sub-pixel accuracy.
 
-* [Auto-calibraton Using Stop Signs - Summer 2020](https://github.com/AutonomousVehicleLaboratory/camera_auto-calib/blob/master/System/pipeline.png)  
+* [Auto-calibraton Using Stop Signs - Summer 2020](https://github.com/y8han/Auto-calibration/blob/master/System/pipeline.png)  
 **Abstract**: For intelligent vehicle applications, calibration is often an important component of sensor fusion, depth estimation and scene understanding. However, in many scenarios, the estimated calibration parameters can change over time as the result of temperature and vibrations. For this reason, we are actively developing tools and methods that leverage road furniture and geometric shapes such as stop signs to dynamically calibrate our cameras on board of our vehicles in real-time.
 
 ## Paper
