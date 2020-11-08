@@ -1,0 +1,72 @@
+DATA:
+  video_root              : ./data
+  dlt_gt_dir              : ./data/intrinsics/camera1/intrinsics_dlt.xml # {yaml, xml}
+  opt_gt_dir              : ./data/intrinsics/camera1/intrinsics_opt.yaml # (yaml, xml)
+
+META:
+  img_ext                 : png # {png, jpg}
+  names_shuffled          : false # shuffle the order of calibration and Kalman filter
+  save_log                : false
+
+DEFAULTS: # DO NOT TOUCH
+  img_root                : /raw_imgs
+  box_root                : /box_imgs
+  box_summary_dir         : /box_imgs/boxes.txt
+  edge_root               : /edge_pts
+  edge_summary_dir        : /edge_pts/edges.txt
+  corner_root             : /corner_pts
+  corner_summary_dir      : /corner_pts/intersections.txt
+  calibrate_root          : /calibrate
+  filter_root             : /filter
+
+## CHECKLIST for ROOTS
+#                         : save_root
+# FRAME_EXTRACTOR         : DATA.video_root
+# DETECTOR                : img_root
+# EDGE                    : box_root, box_summary_dir
+# LINE_ESTIMATE           : img_root, edge_root, edge_summary_dir
+# CALIBRATE               : img_root, corner_root, corner_summary_dir, DATA.dlt_gt_dir, DATA.opt_gt_dir
+# FILTER                  : img_root, corner_root, corner_summary_dir, DATA.dlt_gt_dir
+
+ROOTS:
+  save_root               : ./exp/New_11
+  img_root                : ./data/png/2020-08-17-18-41-03.bag/camera1
+
+FRAME_EXTRACTOR:
+  is_on                   : false
+  period                  : 5
+
+DETECTOR:
+  is_on                   : false
+  model                   : mask-rcnn # {mask-rcnn, faster-rcnn}
+  box_scale               : -1 # active: positive values
+
+EDGE:
+  is_on                   : false
+
+LINE_ESTIMATE:
+  is_on                   : false
+  args: 
+    correctness_thresh    : 12
+    is_improved           : True
+    pt_improve_thresh     : -1  # active: [0, 1]
+    line_improve_thresh   : 0.4 # active: [0, 1]
+    shape_check           : 2   # {1: line parallelism, 2: octagon shape matching}
+    is_brute_force        : True
+    is_paral              : True
+    debug                 : False
+
+CALIBRATE:
+  is_on                   : false
+  args:
+    vis_on                : False 
+
+FILTER:
+  is_on                   : false
+  args:
+    mode                  : 3 # {1: smoothing, 2: sliding window, 3: accumulation}
+    window_size           : 6
+    system_noise          : 1
+    measure_noise         : 1000
+    initial_cov           : 100
+    vis_on                : False

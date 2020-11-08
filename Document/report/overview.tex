@@ -1,0 +1,543 @@
+\documentclass[a4paper, 11pt]{article}
+% ----- Loading the Package MCMthesis -----
+% -----           v 5.01-L            -----
+% `tcn' is short for `Team Control Number'.
+% You should fill your tcn after the equal sign following tcn.
+% The option `sheet' contorls weather the summary sheet
+% will appear.
+% The option `abstract' controls weather the abstract
+% will appear in the title-page.
+\usepackage{float}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{diagbox}
+\usepackage{color}
+% ----- Question Mark -----
+% ----- Fonts settings -----
+% You may need to install the font files, if it's needed.
+% Disable it, if you don't want this font.
+\usepackage{palatino}
+\usepackage{geometry}% 能设置页边距
+\usepackage{setspace}% 能设置行距
+\usepackage{graphicx} %插入图形宏包
+\usepackage{float} %与插入图形有关 禁止图表的浮动[H]
+% ----- Set the skip betweent the paragraphics -----
+\setlength\parskip{.5\baselineskip}
+\setcounter{tocdepth}{4}
+% ----- The name of Abstract ------
+\providecommand{\abstractname}{\relax} % <-- Do not modify here.
+\renewcommand{\abstractname}{\Large Abstract} % <-- Modify here, if needed.
+\usepackage{listings}
+\usepackage{color} %red, green, blue, yellow, cyan, magenta, black, white
+\definecolor{mygreen}{RGB}{28,172,0} % color values Red, Green, Blue
+\definecolor{mylilas}{RGB}{170,55,241}
+% -----------------------------------
+% ===== The Title of Your Paper =====
+% -----------------------------------
+\newtheorem{law}{Law} 
+\newtheorem{jury}[law]{Jury} 
+\newtheorem{mur}{Murphy}[section] 
+\title{Camera Intrinsic Calibration Using Stop Signs}
+% ---------------------------------------
+% ===== The Author(s) of Your Paper =====
+% ---------------------------------------
+\author{Yunhai Han \\
+\textit{Department of Mechanical and Aerospace Engineering}\\
+y8han@eng.ucsd.edu\\
+Yuhan Liu\\
+\textit{Department of Computer Science and Engineering}\\
+yul139@eng.ucsd.edu}
+% ----------------
+% ===== Time =====
+% ----------------
+\newgeometry{left=2.5cm,right=2.5cm,top=2.5cm,bottom=1.5cm}
+%首先 \begin{item} 是输出标号段落内容   \cite{} 能标号
+\begin{document}
+% Abstract should be put before `\maketitle'
+\maketitle
+% Generate the Table of Contents, if it's needed.
+% \tableofcontents
+% \newpage
+% The body of your paper
+
+%====================== 问题介绍====================================
+\section{Overview}
+The aim of this project is to calibrate the cameras without any available objects like chessboards when the vehicle is driving on the road. In the last winter break, we found some papers about self-calibration and compared the advantages and disadvantages of each method proposed by them. Finally, we decided to use license plates as the reference known objects for auto-calibration because at that moment, we thought they are the most common objects in the scenes.
+
+The importance of auto-calibration for autonomous vehicles can be shown as follow:
+
+In some papers, the researchers emphasize that the cameras' intrinsic and extrinsic parameters could change especially for these installed on the vehicles. As a result, some methods don't employ the hypothesis that the camera's parameters are constant and instead take them as varying variables. In \textit{Geometric Stability of Low-cost Digital Consumer Cameras}, they consider the cameras' geometric stability when using the camera's features such as zoom or auto focus. In \textit{The Effects of Temperature Variation on Single-Lens-Reflex Digital Camera Calibration Parameters}, they investigate the effect of variations in temperature on modern single-lens-reflex(SLR) digital cameras from a series of trials. The results show that temperature could affect camera calibration parameters.
+
+Considering that the working conditions for autonomous vehicles could change a lot in two aspects:
+\begin{itemize}
+\item From the short-term perspective, the temperature is totally different during daytime or in the night. Besides, after a long journey on the bumpy road, the lens in the camera may move.
+\item From the long-term perspective, the temperature is totally different during different seasons. And it is harder to guarantee that every parts in the cameras are intact.
+\end{itemize}
+\section{Related work}
+In \textit{Iterative Calibration of a Vehicle Camera using Traffic Signs Detected by a Convolutional Neural Network}, they use detected traffic signs to calibrate a vehicle camera. The main principles behind it are the same as those used in chessboard calibration(with known objects). However, the results are not comparable with the ones computed from chessboard calibration. In \textit{AutoCalib: Automatic Traffic Camera Calibration at Scale}, researchers from Microsoft Research use vehicle models to calibrate the cameras. They extract the feature points on the detected vehicle from the image and associate them with the points on the real vehicle model. However, due to the fact that various vehicles made by different car companies have different vehicle models, the results are not good. In \textit{A novel method for camera external parameters online calibration using dotted road line}, they use vanishing points obtained from road lines to calibrate the cameras. In \textit{Camera Calibration from Video of a Walking Human}, they propose a method to obtain the vanishing points from a walking human.
+\section{Experiments and findings}
+In this case, we can only expect to extract four noisy corners points from each license plate on the images, which is not enough to obtain accurate results. To be more specific, we could not obtain any reasonable results only using license plate. Then, we did a series of simulations and found the positive relations between the number of points and the accuracy of results. Thus, we thought stop sign may be a better object for calibration since in ideal conditions, 24 points are available.
+\section{Project timeline}
+Here we briefly describe the work that have been done:
+\begin{itemize}
+\item [1.] Winter vacation  
+
+Try to extract license plate from videos.
+\item [2.] Winter quarter
+
+\begin{itemize}
+    \item [a] Fail to obtain accurate calibration results using only four corners
+    \item [b] Study the kernel of the planer calibration algorithms and the factors that affect accuracy.
+    \item [c] Decide to use stop sign for calibration
+\end{itemize}
+\item [3.] Spring quarter
+
+Build the experiment simulator and finish the whole system
+\end{itemize}
+\section{Stop sign calibration} 
+\subsection{Simulator}
+Before doing experiments on the real stop signs, we first build a simulator in which we manually project a stop sign(shown in Fig\ref{fig:1}) onto an image using specified intrinsic and extrinsic matrix. The reason is that it is easier for us to compare the calibration results with the groundtruth(set manually).
+\begin{figure}[H] 
+\centering
+\includegraphics[angle=0,height=8cm,width=8cm]{Img/Simulator/trafficsign.png}
+\caption{Reference object(stop sign)} \label{fig:1}
+\end{figure}
+This simulator is considered as a testbed for our whole system:
+\begin{itemize}
+\item Extraction of stop sign
+\item Detection of line points
+\item Line extraction from points
+\item Calibration
+\end{itemize}
+Here are two examples:
+\begin{figure}[H]
+\begin{minipage}[c]{0.50\textwidth}
+\centering
+\includegraphics[height=8cm,width=8cm]{Img/Simulator/Traffic_sign(image0).jpg}
+\end{minipage}
+\begin{minipage}[c]{0.50\textwidth}
+\centering
+\includegraphics[height=8cm,width=8cm]{Img/Simulator/Traffic_sign(image1).jpg}
+\end{minipage}
+\caption{Simulated image}
+\end{figure}
+\subsection{Real stop sign}
+We also took videos of real stop signs and input the images into the same system. Here are some example:
+\begin{figure}[H]
+\begin{minipage}[c]{0.5\textwidth}
+\centering
+\includegraphics[height=10cm,width=6cm]{Img/Real/2.jpg}
+\end{minipage}
+\begin{minipage}[c]{0.5\textwidth}
+\centering
+\includegraphics[height=10cm,width=6cm]{Img/Real/4.jpg}
+\end{minipage}
+\begin{minipage}[c]{0.5\textwidth}
+\centering
+\includegraphics[height=10cm,width=6cm]{Img/Real/8.jpg}
+\end{minipage}
+\begin{minipage}[c]{0.5\textwidth}
+\centering
+\includegraphics[height=10cm,width=6cm]{Img/Real/10.jpg}
+\end{minipage}
+\caption{Real images}\label{fig:image}
+\end{figure}
+The image size of each is [720,1280] because these images were took in portrait mode.
+
+The results shown below are all obtained from real images instead of them from simulator.
+\subsection{Extraction of Stop Signs}
+\subsubsection{Method}
+The current system adopts the primitive algorithm of Gaussian Naive Bayes (GNB), to classify each pixel as belonging to a stop sign or not.\\
+
+Given a pixel of three channels $x_*\in \mathbb{R}^3$, the GNB classifier generates a label $y_*\in \{\texttt{YES}, \texttt{NO}\}$ as follows:
+\[
+y_{*}=\underset{y \in\{\texttt{YES}, \texttt{NO}\}}{\arg \max } \log \theta_{y}^{M L E}+\sum_{l=1}^{3} \log \phi\left(x_{* l} ; \mu_{y l}^{M L E},\left(\sigma_{y l}^{M L E}\right)^{2}\right)
+\]
+where the three parameters ($k\in \{\texttt{YES}, \texttt{NO}\}, l\in \{1, 2, 3\}$)
+\[
+\theta_{k}^{M L E}=\frac{1}{n} \sum_{i=1}^{n} \mathbf{1}\left\{y_{i}=k\right\}
+\]
+\[
+\mu_{k l}^{M L E}=\frac{\sum_{i=1}^{n} x_{il}  \mathbf{1}\left\{y_{i}=k\right\}}{\sum_{i=1}^{n} \mathbf{1}\left\{y_{i}=k\right\}}
+\]
+\[
+\sigma_{k l}^{M L E}=\sqrt{\frac{\sum_{i=1}^{n}\left(x_{i l}-\mu_{k l}^{M L E}\right)^{2} \mathbf{1}\left\{y_{i}=k\right\}}{\sum_{i=1}^{n} \mathbf{1}\left\{y_{i}=k\right\}}}
+\]
+are trained with $n$ labeled pixels: $(x_i, y_i)\in \mathbb{R}^3\times \{\texttt{YES}, \texttt{NO}\}$.\\
+
+Once the image with pixel-wise labels is obtained, candidate stop sign areas can be proposed by grouping connected pixels together. By enforcing prior knowledge of stop signs (like the area range and the aspect ratio), false positives can be filtered. In this way, the pixel-wise mask and bounding box for each stop sign are extracted.
+\subsubsection{Results}
+\begin{figure}[H]
+    \centering
+    \includegraphics[angle=0,height=8cm,width=16cm]{Img/Real/mask1.png}
+    \caption{Mask 1 (Left: original image; Middle: Bounding Box; Right: Pixelwise Mask)}
+    \label{fig:mask1}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[angle=0,height=8cm,width=16cm]{Img/Real/mask2.png}
+    \caption{Mask 2 (Left: original image; Middle: Bounding Box; Right: Pixelwise Mask)}
+    \label{fig:mask2}
+\end{figure}
+
+% \begin{figure}[H]
+% \begin{minipage}[c]{0.50\textwidth}
+% \centering
+% \includegraphics[height=5.5cm,width=5.5cm]{Img/Real/2box.png}
+% \end{minipage}
+% \begin{minipage}[c]{0.50\textwidth}
+% \centering
+% \includegraphics[height=5.5cm,width=5.5cm]{Img/Real/4box.png}
+% \end{minipage}
+% \end{figure}
+% \begin{figure}[H]
+% \begin{minipage}[c]{0.50\textwidth}
+% \centering
+% \includegraphics[height=5.5cm,width=5.5cm]{Img/Real/8box.png}
+% \end{minipage}
+% \begin{minipage}[c]{0.50\textwidth}
+% \centering
+% \includegraphics[height=5.5cm,width=5.5cm]{Img/Real/10box.png}
+% \end{minipage}
+% \end{figure}
+\subsubsection{Issues}
+\begin{enumerate}
+    \item \underline{Training} The classifier was trained to classify only the redness of the stop signs - the white borders and the characters are not labelled as stop signs; The training dataset contains only images with forth-faced, clear-captured stop signs under good weathers - the classifier has trouble with worse-conditioned stop sign images.
+    \item \underline{Model} The GNB is a statistical model based only on the pixel colors. It does not learn any semantic meaning of stop signs. Objects like a traffic light with similar colors as the stop sign's red can be classified as stop signs (false positives), while stop signs in shadows, under- or over-exposure (false negatives) may be dismissed.
+\end{enumerate}
+In the future, deep learning methods (e.g. object detection, semantic segmentation, instance segmentation) should be introduced to get more precise extraction.
+
+\subsection{Detection of line points} \label{DLP}
+We employed the method proposed in \textit{A Sub-Pixel Edge Detector: an Implementation of the Canny/Devernay Algorithm(method of extracting line points with sub-pixel accuracy)} and detected all the points(with sub-pixel accuracy) whose pixel gradients are larger than a specified threshold. 
+\subsubsection{Algorithm}
+\begin{itemize}
+    \item [a.] Canny Method 
+    
+    Canny proposed to use the first-derivative Gaussian filter for two-dimensional signals (images) by analyzing the one-dlimensional signal along the direction $n,$ normal to the boundary. Thus, edge points are defined to the local maximum in the direction $n$ of
+    \begin{displaymath}\frac{\partial}{\partial n} G \star I\end{displaymath}
+    The direction $n$ orthogonal to the boundary can be estimated by the image gradient
+\[
+n \approx \frac{\nabla(G \star I)}{|\nabla(G \star I)|}
+\]
+Which corresponds to the norm of the gradients along x and y axis.
+
+This method of keeping only local maximum is called \textit{non-maximum suppression} and it is very vulnerable to random noise. Thus, Canny proposed to discriminate true edges using two thresholds, $H$ and $L$. Local maximum with strength above the high threshold $H$ are immediately validated and added to the output; local maximum connected to validated points are validated if their strength is above the low threshold $L$.
+
+In all, Canny's method depends on three parameters: $S$, the standard deviation of the Gaussian kernel $G,$ and the two thresholds $H$ and $L$.
+    \item [b.] The Devernay Sub-Pixel Correction 
+    
+    Canny's method finds edge pixels. In other words, edge points are extracted up to the pixel grid precision. In some applications one may require to have the position of the edge points with finer accuracy. For that aim, Devernay
+    proposed a very elegant addition to the original Canny algorithm to produce sub-pixel accuracy edge points.
+    
+    Suppose the pixel point $B$ is a local maximum of $||g||$ in the direction of the image gradient and the gradient at point $A$ and point $C$ can be approximated by:
+    \begin{displaymath}\begin{array}{l}
+    \|g(A)\| \approx \frac{g_{x}(B)-g_{y}(B)}{g_{x}(B)}\|g(D)\|+\frac{g_{y}(B)}{g_{x}(B)}\|g(E)\| \\
+    \|g(C)\| \approx \frac{g_{x}(B)-g_{y}(B)}{g_{x}(B)}\|g(G)\|+\frac{g_{y}(B)}{g_{x}(B)}\|g(F)\|
+    \end{array}\end{displaymath}
+    \begin{figure}[H]\label{fig:Canny} %[H]表明图片输出在指定想要的位置（即代码处的位置），不然图片输出此页最上方，
+    \centering
+    \includegraphics[angle=0,height=8cm,width=10cm]{Img/other/canny.png}
+    \caption{Canny operator}\label{fig:Canny}
+    \end{figure}
+    Devernay proposed that the position of an edge point is refined as the maximum
+    of an interpolation of the gradient norm; the correction is as simple as computing a quadratic
+    interpolation of the gradient norm between three neighboring positions along the gradient direction.
+    \begin{figure}[H]\label{fig:Devernay} %[H]表明图片输出在指定想要的位置（即代码处的位置），不然图片输出此页最上方，
+    \centering
+    \includegraphics[angle=0,height=8cm,width=14cm]{Img/other/Devernay.png}
+    \caption{Profile of the norm of the image gradient along the direction of the image gradient}\label{fig:Devernay}
+    \end{figure}
+    Fig\ref{fig:Canny} and Fig\ref{fig:Devernay} shows an example: Canny's method keeps pixel $B$ as an edge pixel because $\|g(B)\|>\|g(A)\|$ and $\|g(B)\|>$ $\|g(C)\| .$ However, there may be an intermediate position $\eta$ between $A$ and $C$ where the norm of the image gradient is larger than in those points. Point $\eta$ would correspond better to the position of the edge. Devernay proposed a method to estimate that position and then compute an offset vector, along the direction $n,$ to give the sub-pixel position of the edge point near the edge pixel $B$
+
+    To limit the computational cost, Devernay proposed to use a simple quadratic interpolation of the gradient norm along the three points used in the Canny operator: $(A,\|g(A)\|)$
+    $,(B,\|g(B)\|)$ 
+    and $(C,\|g(C)\|)$. Solving the maximum point leads to an offset:
+    \begin{displaymath}\eta=\frac{1}{2} \frac{\|g(A)\|-\|g(C)\|}{\|g(A)\|+\|g(C)\|-2\|g(B)\|}\end{displaymath}
+    relative to the vector $\overrightarrow{B C}$.
+    
+    \item [c.] Edge Point Chaining
+    
+    Each edge point is computed independently from the others and the ones that belong to the same edge need to be chained to form the curves corresponding to the contours of the image. A simple procedure can be used for the chaining: connect an edge point to the nearest other edge points not farther than a certain tolerance.
+    
+    The first verification that is performed is that edge points to be chained have a similar gradient orientation. To make a chaining from $A$ to $B$, it is required that the angle between $g(A)$ and $g(B)$ be less than 90 degree. This is verified by the condition $g(A) \cdot g(B)>0,$ where $\cdot$ is the dot product.
+    
+    The second verification is that: An image contour separates a light region from a darker one. The chaining needs to be coherent in the sense that consecutive chains must leave the darker region to the same side of the curve. A simple way of imposing this is to verify that the vector from edge point $A$ to edge point $B$ to be chained is roughly orthogonal to the image gradient in $A$ in one of the two possible directions. As a convention, we will call a forward chaining from edge point $A$ to edge point $B$ one in which $\overrightarrow{A B} \cdot g(A)^{\perp}>0,$ where $\vec{v}^{\perp}$ corresponds to vector $\vec{v}$ rotated 90 degrees.
+    
+    More details are included in the previous paper I mentioned.
+\end{itemize}
+\subsubsection{Results}
+Here, four sets of extracted points, which corresponds to the four images in Fig\ref{fig:image} respectively, are shown:
+\begin{figure}[H]
+\begin{minipage}[c]{0.50\textwidth}
+\centering
+\includegraphics[height=6cm,width=6cm]{Img/Real/2_output.png}
+\caption{Output1}
+\end{minipage}
+\begin{minipage}[c]{0.50\textwidth}
+\centering
+\includegraphics[height=6cm,width=6cm]{Img/Real/4_output.png}
+\caption{Output2}
+\end{minipage}
+\end{figure}
+\begin{figure}[H]
+\begin{minipage}[c]{0.50\textwidth}
+\centering
+\includegraphics[height=6cm,width=6cm]{Img/Real/8_output.png}
+\caption{Output3}
+\end{minipage}
+\begin{minipage}[c]{0.50\textwidth}
+\centering
+\includegraphics[height=6cm,width=6cm]{Img/Real/10_output.png}
+\caption{Output4}
+\end{minipage}
+\end{figure}
+From the above four figures, output1, output3 and output4 are perfect and can be safely used in the next part. However, output2 is not good:many edges can not be detected. This is the first unsolved problem:the image quality could greatly affect the point detection algorithm.
+
+You can see that we decide to only use the inner octagon and the character T because we found that if the zebra crosswalk or other objects(for example, branches) intersects with the stop sign, it is hard to distinguish the outer octagon. Besides, after experiment, only 12 corner points for each image are enough to provided good calibration result.
+\subsubsection{Unsolved problems}
+\begin{itemize}
+    \item [1.]Image quality
+    
+    I re-put the raw image for output2:
+\begin{figure}[H]
+\centering
+\includegraphics[height=6cm,width=6cm]{Img/Real/4box.png}
+\caption{Raw image for output2}
+\end{figure}
+Zoom in part of the picture, and you will see:
+\begin{figure}[H]
+\centering
+\includegraphics[height=6cm,width=6cm]{Img/other/4_zoom.png}
+\caption{Zoom-in part}
+\end{figure}
+The red pixels and the white pixels blend with each other in an disordered way. Hence, the existing detection algorithm can not work in such case. It is not a big problem since we could always collect enough images with stop sign for calibration. However, if this algorithm is applied to autonomous driving car in the future, we have to figure a method either to improve the raw image quality(maybe try histogram equalization) or distinguish such bad images and discard them.
+    \item [2.] Edge points classification
+    
+    Compare the output3 with output4, it is not guaranteed that the points chain always form continuous curve. In this case, the chain with fewer points maybe be hard to be distinguished from other edges which are not parts of inner octagon. This is why we discard the information of outer octagon. However, even for the inner octagon, it happens from time to time. In our experiment, with human intervention, we can manually select the chains that we need. 
+    
+    Also, the four character 'S','T','O','P' can all be detected. Right now, we manually select the chain that correspond to 'T'.
+    
+    There are two possible solutions:
+    \begin{itemize}
+        \item [a.] Keep all the chains and use the SVD method described in the next part to extract the eight edges. This would take more computation effort.
+        \item [b.] Decrease the area of the pixelwise mask, so the number of false positive edges would be reduced.
+    \end{itemize}
+\end{itemize}
+\subsection{Edge Estimation and Intersection Filtering}
+\subsubsection{Edge Estimation Method} \label{EEM}
+The algorithm in section \ref{DLP} generates sub-pixel accurate edge points of the inner polygon and the character 'T', respectively. By iteratively applying RANSAC over SVD on the points, line segments of edges can be estimated, and their intersections are the candidates for corners of the inner polygon and the character 'T'.\\
+
+Given $N$ homogeneous coordinates of 2D points
+\[
+X = \begin{pmatrix}
+x_1 & y_1 & 1\\
+& \vdots &\\
+x_N & y_N & 1
+\end{pmatrix},
+\]
+three line parameters 
+\[
+n = \begin{pmatrix}
+a\\
+b\\
+c
+\end{pmatrix} 
+\] 
+are to be found, so that $||X \cdot n||_2^2$
+is minimized. This can be solved by getting the Singular Value Decomposition (SVD) of the homogeneous points matrix $X = U\cdot \Sigma\cdot V^T$, where the line vector $n$ is the column vector of matrix $V$ corresponding to the smallest singular value in $\Sigma$.\\
+
+The points of any edge can not be separated from the whole point set, but a line supported by most "close points" (to be defined later) must belong to one of the edges. Here, a RANSAC algorithm is used to vote for this line:\\
+
+Repeat for $R$ times:
+\begin{enumerate}
+    \item \underline{Sample} Randomly sample $k$ kernel points $X_{kernel}$ from the whole point set $X$ (in practice, $k=2$ as the minimum required points of a line);
+    \item \underline{Fit} Fit a line $n$ to these kernel points $X_{kernel}$ with the SVD explained above;
+    \item \underline{Evaluate} Calculate the distance of all points in $X$ to the line $n$:
+    \[
+    D = \frac{|X\cdot n|}{\sqrt{a^2+b^2}}
+    \]
+    and count the number of “close points", which are points with distance no more than a threshold $d_{thresh}$ (in practice, $d_{thresh}=1$ to get sub-pixel accurate line estimation) as the "correctness".
+\end{enumerate}
+The line $n$ corresponding to the largest "correctness" is the best line fitting the most points. \\
+
+Remove the support points, and repeat above procedure for $L$ times, then $L$ edges can be estimated ($L=8$ for inner polygon, $L=4$ for character 'T').
+
+One consideration is to choose a proper repeat number $R$ for the RANSAC, so that $R$ is as small as possible to make a efficient algorithm, while large enough to guarantee hitting the edge with probability $p\in [0, 1]$:
+\[
+R = \frac{\operatorname{log}_2(1-p)}{\operatorname{log}_2(1-(1-\epsilon)^k)},
+\]
+where $k$ is the kernel size, and $\epsilon\in [0, 1]$ is the probability of observing an outliner in the points set. To find the ith $i \in \{1, \hdots L\}$ edge, $\epsilon=1-\frac{1}{L-i+1}$. If noisy points (points that don't belong to any edge) are considered, $\epsilon$ should be increased accordingly.\\
+
+\subsubsection{Intersection Filtering Method}
+Only part of the line intersections from section \ref{EEM} belongs to the corners. To filter out the outliners, intersections are required to be close (within a threshold) to at least one of the terminal points of the corresponding line segments.\\ 
+
+However, this doesn't work with corners in between the segment's terminals (e.g. 'T's' center corners). To account for this, intersections close (within a threshold) to the points' centroid are also included.\\
+
+Further, corners of convex shapes (e.g. 8 corners of the inner polygon, or 4 center corners of the character 'T') can be sorted in (counter-)clockwise order, according to the angles of the lines connecting them to the centroid.\\
+
+\subsubsection{Results}
+
+% \begin{figure}[H]
+% \begin{minipage}[c]{0.50\textwidth}
+% \centering
+% \includegraphics[height=8cm,width=8cm]{Line_detection_estimate_image0.jpg}
+% \end{minipage}
+% \begin{minipage}[c]{0.50\textwidth}
+% \centering
+% \includegraphics[height=8cm,width=8cm]{Line_detection_estimate_image1.jpg}
+% \end{minipage}
+% \end{figure}
+In both examples, all the 24 corner points can be detected.
+
+\subsubsection{Issues}
+\begin{enumerate}
+    \item \underline{Edge Estimation} RANSAC assumes that the number of outliners are less than that of inliners. If not the case, the algorihthm should fail.
+    \item \underline{Intersection Filtering} The assumptions
+    \begin{itemize}
+        \item corners are close to the terminals;
+        \item corners are close to the centroid
+    \end{itemize} are strong. It is quite common to have unexpected situations like
+    \begin{itemize}
+        \item estimated segments are longer or shorter than the edges, so intersections are dismissed from corners because they are not close to them segments' terminals;
+        \item an intersection is close to a terminal, but is not a corner point.
+    \end{itemize}
+\end{enumerate}
+
+\subsection{Calibration}
+The calibration kernel is based on the famous algorithm:plane calibration. It is also the algorithm behind the chessboard calibration. Here, the algorithm detail are first proposed by Zhang in his famous paper \textit{Flexible Camera Calibration By Viewing a Plane From unknown Orientations}.
+\subsubsection{Algorithm}
+\begin{itemize}
+\item [1.] Notation
+
+A $2 \mathrm{D}$ point is denoted by $\mathrm{m}=[u, v]^{T} .$ A $3 \mathrm{D}$ point is denoted by $\mathrm{M}=[X, Y, Z]^{T} .$ We use $\widetilde{\mathrm{x}}$ to denote the augmented vector by adding 1 as the last element: $\tilde{\mathbf{m}}=[u, v, 1]^{T}$ and $\tilde{\mathrm{M}}=[X, Y, Z, 1]^{T} .$ A camera is modeled by the usual pinhole: the relationship between a 3 D point $\mathrm{M}$ and its image projection $\mathrm{m}$ is given by
+\[
+\boldsymbol{s} \tilde{\mathbf{n}}=\mathbf{A}[\mathbf{R} \quad \mathbf{t}] \tilde{\mathbf{M}}
+\]
+where $s$ is an arbitrary scale factor, $(\mathbf{R}, \mathbf{t}),$ called the extrinsic parameters, is the rotation and translation which relates the world coordinate system to the camera coordinate system, and $\mathbf{A},$ called the camera intrinsic matrix, is given by
+\begin{equation}
+\mathbf{A}=\left[\begin{array}{lll}
+\alpha & \gamma & u_{0} \\
+0 & \beta & v_{0} \\
+0 & 0 & 1
+\end{array}\right]
+\end{equation}
+with $\left(u_{0}, v_{0}\right)$ the coordinates of the principal point, $\alpha$ and $\beta$ the scale factors in image $u$ and $v$ axes, and $\gamma$ the parameter describing the skewness of the two image axes We use the abbreviation $\mathbf{A}^{-T}$ for $\left(\mathbf{A}^{-1}\right)^{T}$ or $\left(\mathbf{A}^{T}\right)^{-1}$.
+
+\item [2.] Homography between the model plane and its image
+
+Without loss of generality, we assume the model plane is on $Z=0$ of the world coordinate system. Let's denote the $i^{\text {th }}$ column of the rotation matrix $\mathbf{R}$ by $\mathbf{r}_{i}$. From ( 1 ), we have
+\[
+\begin{aligned}
+s\left[\begin{array}{l}
+u \\
+v \\
+1
+\end{array}\right]=\mathbf{A}\left[\begin{array}{llll}
+\mathbf{r}_{1} & \mathbf{r}_{2} & \mathbf{r}_{3} & \mathbf{t}
+\end{array}\right]\left[\begin{array}{l}
+X \\
+Y \\
+0 \\
+1
+\end{array}\right] \\
+&=\mathbf{A}\left[\begin{array}{lll}
+\mathbf{r}_{1} & \mathbf{r}_{2} & \mathbf{t}
+\end{array}\right]\left[\begin{array}{l}
+X \\
+Y \\
+1
+\end{array}\right]
+\end{aligned}
+\]
+By abuse of notation, we still use $M$ to denote a point on the model plane, but $M=[X, Y]^{T}$ since $Z$ is always equal to $0 .$ In turn, $\widetilde{\mathrm{M}}=[X, Y, 1]^{T} .$ Therefore, a model point $\mathrm{M}$ and its image $\mathrm{m}$ is related by a homography H:
+\begin{equation}
+s \tilde{\mathbf{m}}=\mathbf{H M} \quad \text { with } \quad \mathbf{H}=\mathbf{A}\left[\mathbf{r}_{1} \quad \mathbf{r}_{2} \quad \mathbf{t}\right]
+\end{equation}
+As is clear, the $3 \times 3$ matrix $\mathrm{H}$ is defined up to a scale factor.
+\item [3.] Constraints on the intrinsic parameters
+
+Given an image of the model plane, an homography can be estimated (see Appendix A). Let's denote it by $\mathbf{H}=\left[\begin{array}{lll}\mathbf{h}_{1} & \mathbf{h}_{2} & \mathbf{h}_{3}\end{array}\right] .$ From $(2),$ we have
+\[
+\left[\begin{array}{lll}
+\mathbf{h}_{1} & \mathbf{h}_{2} & \mathbf{h}_{3}
+\end{array}\right]=\lambda \mathbf{A}\left[\begin{array}{lll}
+\mathbf{r}_{1} & \mathbf{r}_{2} & \mathbf{t}
+\end{array}\right]
+\]
+where $\lambda$ is an arbitrary scalar. Using the knowledge that $\mathrm{r}_{1}$ and $\mathrm{r}_{2}$ are orthonormal, we have
+\begin{equation}
+\mathbf{h}_{1}^{T} \mathbf{A}^{-T} \mathbf{A}^{-1} \mathbf{h}_{2}=0
+\end{equation}
+\begin{equation}
+\mathbf{h}_{1}^{T} \mathbf{A}^{-T} \mathbf{A}^{-1} \mathbf{h}_{1}=\mathbf{h}_{2}^{T} \mathbf{A}^{-T} \mathbf{A}^{-1} \mathbf{h}_{2}
+\end{equation}
+These are the two basic constraints on the intrinsic parameters, given one homography. Because a homography has 8 degrees of freedom and there are 6 extrinsic parameters ( 3 for rotation and 3 for translation), we can only obtain 2 constraints on the intrinsic parameters. Note that $\mathrm{A}^{-T} \mathrm{A}^{-1}$ actually describes the image of the absolute conic [16]. In the next subsection, we will give an geometric interpretation.
+\item[4.] Closed-form solution using DLT method
+Let
+\begin{equation}
+\begin{array}{l}
+\mathrm{B}=\mathrm{A}^{-T} \mathrm{A}^{-1} \equiv\left[\begin{array}{lll}
+B_{11} & B_{12} & B_{13} \\
+B_{12} & B_{22} & B_{23} \\
+B_{13} & B_{23} & B_{33}
+\end{array}\right] \\
+=\left[\begin{array}{ccc}
+\frac{1}{\alpha^{2}} & -\frac{\gamma}{\alpha^{2 \beta}} & \frac{v_{0} \gamma-u_{0} \beta}{\alpha^{2} \beta} \\
+-\frac{\gamma}{\alpha^{2} \beta} & \frac{\gamma^{2}}{\alpha^{2} \beta^{2}}+\frac{1}{\beta^{2}} & -\frac{\gamma\left(v_{0} \gamma-u_{0} \beta\right)}{\alpha^{2} \beta^{2}}-\frac{v_{0}}{\beta^{2}} \\
+\frac{v_{0} \gamma-u_{0} \beta}{\alpha^{2} \beta} & -\frac{\gamma\left(v_{0} \gamma-u_{0} \beta\right)}{\alpha^{2} \beta^{2}}-\frac{v_{0}}{\beta^{2}} & \frac{\left(v_{0} \gamma-u_{0} \beta\right)^{2}}{\alpha^{2} \beta^{2}}+\frac{v_{0}^{2}}{\beta^{2}}+1
+\end{array}\right]
+\end{array}
+\end{equation}
+The above equation can be simplified if we assume $\gamma=0$.
+
+Note that $\mathrm{B}$ is symmetric, defined by a $6 \mathrm{D}$ vector
+\begin{equation}
+\mathbf{b}=\left[B_{11}, B_{12}, B_{22}, B_{13}, B_{23}, B_{33}\right]^{T}
+\end{equation}
+Let the $i^{\text {th }}$ column vector of $\mathrm{H}$ be $\mathrm{h}_{i}=\left[h_{i 1}, h_{i 2}, h_{i 3}\right]^{T}$. Then, we have
+\begin{equation}
+\mathbf{h}_{i}^{T} \mathbf{B h}_{j}=\mathbf{v}_{i j}^{T} \mathbf{b}
+\end{equation}
+with
+\[
+\begin{aligned}
+\mathbf{v}_{i j}=\left[h_{i 1} h_{j 1}, h_{i 1} h_{j 2}+h_{i 2} h_{j 1}, h_{i 2} h_{j 2}\right.\\
+\left.h_{i 3} h_{j 1}+h_{i 1} h_{j 3}, h_{i 3} h_{j 2}+h_{i 2} h_{j 3}, h_{i 3} h_{j 3}\right]^{T}
+\end{aligned}
+\]
+Therefore, the two fundamental constraints (3) and $(4),$ from a given homography, can be rewritten as 2 homogeneous equations in $\mathbf{b}$
+\begin{equation}
+\left[\begin{array}{c}
+\mathbf{v}_{12}^{T} \\
+\left(\mathbf{v}_{11}-\mathbf{v}_{22}\right)^{T}
+\end{array}\right] \mathbf{b}=\mathbf{0}
+\end{equation}
+If $n$ images of the model plane are observed, by stacking $n$ such equations as (8) we have
+\begin{equation}
+\mathbf{V b}=\mathbf{0}
+\end{equation}
+The solution of the above equation to is well known as the eigenvector of $\mathrm{V}^{T}$ V associated with the smallest eigenvalue (equivalently, the right singular vector of $V$ associated with the smallest singular value).
+\item [5.] Maximum likelihood estimation using optimization method
+The solution from DLT method can be set as the initial value for optimization. Indeed, only a few iterations are needed. 
+\end{itemize}
+\subsection{Results}
+\begin{figure}[H]
+    \centering
+    \includegraphics[angle=0,height=10cm,width=10cm]{Img/other/Calibration_results.png}
+    \caption{Calibration result}
+    \label{fig:result}
+\end{figure}
+The relative errors when using 10 images are very small for both $f_x$ and $f_y$.
+\subsection{Issue}
+Here, we consider the chessboard calibration result as the groundtruth since it is commonly used. If necessary, we can use another way to verify the correctness of out results:
+
+     Estimate the distance between the camera and an plane object using the obtained intrinsic matrix. The object is placed at a known distance. Compare the estimated distance and the true distance.
+\section{Problems}
+There are three main problems:
+\begin{itemize}
+\item Raw image quality
+\item Edge points classification
+\item Automatic corner points matching algorithm
+\end{itemize}
+\end{document}
+% ----- End of Document Body -----
